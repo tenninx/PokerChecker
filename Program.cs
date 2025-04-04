@@ -1,13 +1,13 @@
 ﻿internal class Program
 {
-    static readonly HashSet<string> Symbols = ["S", "H", "D", "C"];
+    static readonly HashSet<string> Suits = ["S", "H", "D", "C"];
 
     private static void Main(string[] args)
     {
         Console.WriteLine("""
             Poker Result Checker
 
-            The symbol on the cards can be inputted as follows:
+            The suit on the cards can be inputted as follows:
             S = ♠ Spade
             H = ♥ Heart
             D = ♦ Diamond
@@ -41,9 +41,9 @@
         {
             Console.WriteLine("\nEnter the combination of 5 cards to check, enter 'x' to terminate:");
 
-            string _input = Console.ReadLine();
+            string _input = Console.ReadLine().ToUpper();
 
-            if (!_input.ToLower().Equals("x"))
+            if (!_input.Equals("X"))
                 Console.WriteLine("The result: {0}", ProcessCards(_input));
             else
                 break;
@@ -57,28 +57,28 @@
         if (_cards == null)
             return "Error Input";
 
-        return GetHand(_cards);
+        return GetHandType(_cards);
     }
 
     private static clsCard[] ValidateInputAndParseCards(string input)
     {
-        input = input.ToString().Trim().Replace(" ", "").ToUpper();
+        input = input.ToString().Trim().Replace(" ", "");
         // Split the input into 5 distinct cards
         string[] _cards = input.Split(",").Distinct().ToArray();
 
         if (_cards.Length != 5) return null;
 
         clsCard[] _objCards = new clsCard[5];
-        string _symbol;
+        string _suit;
 
         for (int i = 0; i < _cards.Length; i++)
         {
-            _symbol = _cards[i].Substring(0, 1);
-            if (!Symbols.Contains(_symbol)) return null;
+            _suit = _cards[i].Substring(0, 1);
+            if (!Suits.Contains(_suit)) return null;
 
             if (!int.TryParse(_cards[i].Substring(1), out int _number) || _number < 0 || _number > 13) return null;
 
-            _objCards[i] = new clsCard { Symbol = _symbol, Number = _number };
+            _objCards[i] = new clsCard { Suit = _suit, Number = _number };
         }
 
         // Sort the cards according to the Number so that it is easier to check straight
@@ -87,11 +87,11 @@
         return _objCards;
     }
 
-    private static string GetHand(clsCard[] input)
+    private static string GetHandType(clsCard[] input)
     {
         clsProcessedCardsStatus _processed = new clsProcessedCardsStatus();
 
-        string _lastSymbol = input[0].Symbol;
+        string _lastSuit = input[0].Suit;
         int _lastNumber = input[0].Number;
 
         // Check if the order is correct for Royal Flush but further check on straight and flush needed
@@ -99,10 +99,10 @@
 
         for (int i = 0; i < input.Length; i++)
         {
-            if (_processed.IsSameSymbol && input[i].Symbol == _lastSymbol)
-                _lastSymbol = input[i].Symbol;
+            if (_processed.IsSameSuit && input[i].Suit == _lastSuit)
+                _lastSuit = input[i].Suit;
             else
-                _processed.IsSameSymbol = false;
+                _processed.IsSameSuit = false;
             // Special case for Royal Flush
             if (_processed.IsStraight && i == 0 && input[0].Number == 1)
                 _lastNumber = 10;
@@ -123,15 +123,15 @@
         // Find the max number of times a Number appears in the collection
         int maxOccurrences = processed.ProcessedCards.Max(num => num.Value);
 
-        if (processed.ProcessedCards.Count == 5 && processed.IsSameSymbol && processed.IsStraight && processed.IsRoyalFlushCandidate)
+        if (processed.ProcessedCards.Count == 5 && processed.IsSameSuit && processed.IsStraight && processed.IsRoyalFlushCandidate)
             return "1. Royal Flush: All cards are of the same suit. Number must be 10, J, Q, K, and A correspondingly.";
-        if (processed.ProcessedCards.Count == 5 && processed.IsSameSymbol && processed.IsStraight)
+        if (processed.ProcessedCards.Count == 5 && processed.IsSameSuit && processed.IsStraight)
             return "2. Straight Flush: All cards are of the same suit. Numbers of the five cards must be continuous.";
         if (maxOccurrences == 4)
             return "3. Four-of-a-Kind: Four out of five cards must have the same number.";
         if (maxOccurrences == 3 && processed.ProcessedCards.Count == 2)
             return "4. Full House: Three out of five cards must have the same number and the remaining two must have the same number accordingly.";
-        if (processed.IsSameSymbol)
+        if (processed.IsSameSuit)
             return "5. Flush: All cards are of the same suit.";
         if (processed.IsStraight)
             return "6. Straight: Numbers of the five cards must be continuous and not all cards are of the same suit.";
@@ -150,7 +150,7 @@
     /// </summary>
     public class clsCard
     {
-        public string Symbol { get; set; }
+        public string Suit { get; set; }
         public int Number { get; set; }
     }
 
@@ -162,10 +162,10 @@
         // True if the Numbers on all cards in the collection are in a sequence
         public bool IsStraight { get; set; } = true;
 
-        // True if the Symbols on all cards in the collection are the same
-        public bool IsSameSymbol { get; set; } = true;
+        // True if the Suits on all cards in the collection are the same
+        public bool IsSameSuit { get; set; } = true;
 
-        // True if the first sorted card is an Ace (Number 1). IsStraight and IsSameSymbol must be True for this flag to be considered.
+        // True if the first sorted card is an Ace (Number 1). IsStraight and IsSameSuit must be True for this flag to be considered.
         public bool IsRoyalFlushCandidate { get; set; } = true;
 
         public Dictionary<int, int> ProcessedCards = new Dictionary<int, int>();
