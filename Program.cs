@@ -94,7 +94,7 @@
         string _lastSymbol = input[0].Symbol;
         int _lastNumber = input[0].Number;
 
-        // Order is correct for Royal Flush but further check on straight needed
+        // Check if the order is correct for Royal Flush but further check on straight and flush needed
         _processed.IsRoyalFlushCandidate = input[0].Number == 1 ? true : false;
 
         for (int i = 0; i < input.Length; i++)
