@@ -89,57 +89,29 @@
 
     private static string GetHandType(clsCard[] input)
     {
-        clsProcessedCardsStatus _processed = new clsProcessedCardsStatus();
+        int _max = input.GroupBy(c => c.Number).Max(d => d.Count());
+        int _count = input.Select(c => c.Number).Distinct().Count();
+        bool isFlush = input.Select(c => c.Suit).Distinct().Count() == 1;
+        bool isRoyalFlush = isFlush && _count == 5 && input[0].Number == 1 ? input[1].Number == 10 && input[4].Number == 13 : false;
+        bool isStraight = !isRoyalFlush && _count == 5 ? input[0].Number == 1 ? input[1].Number == 10 && input[4].Number == 13 : input[4].Number - input[0].Number == 4 : false;
 
-        string _lastSuit = input[0].Suit;
-        int _lastNumber = input[0].Number;
-
-        // Check if the order is correct for Royal Flush but further check on straight and flush needed
-        _processed.IsRoyalFlushCandidate = input[0].Number == 1 ? true : false;
-
-        for (int i = 0; i < input.Length; i++)
-        {
-            if (_processed.IsSameSuit && input[i].Suit == _lastSuit)
-                _lastSuit = input[i].Suit;
-            else
-                _processed.IsSameSuit = false;
-            // Special case for Royal Flush
-            if (_processed.IsStraight && i == 0 && input[0].Number == 1)
-                _lastNumber = 10;
-            else if (_processed.IsStraight && input[i].Number != _lastNumber++)
-                _processed.IsStraight = false;
-
-            if (!_processed.ProcessedCards.ContainsKey(input[i].Number))
-                _processed.ProcessedCards.Add(input[i].Number, 1);
-            else
-                _processed.ProcessedCards[input[i].Number]++;
-        }
-
-        return GetResult(_processed);
-    }
-
-    private static string GetResult(clsProcessedCardsStatus processed)
-    {
-        // Find the max number of times a Number appears in the collection
-        int maxOccurrences = processed.ProcessedCards.Max(num => num.Value);
-
-        if (processed.ProcessedCards.Count == 5 && processed.IsSameSuit && processed.IsStraight && processed.IsRoyalFlushCandidate)
+        if (isRoyalFlush)
             return "1. Royal Flush: All cards are of the same suit. Number must be 10, J, Q, K, and A correspondingly.";
-        if (processed.ProcessedCards.Count == 5 && processed.IsSameSuit && processed.IsStraight)
+        if (isFlush && isStraight)
             return "2. Straight Flush: All cards are of the same suit. Numbers of the five cards must be continuous.";
-        if (maxOccurrences == 4)
+        if (_max == 4)
             return "3. Four-of-a-Kind: Four out of five cards must have the same number.";
-        if (maxOccurrences == 3 && processed.ProcessedCards.Count == 2)
+        if (_max == 3 && _count == 2)
             return "4. Full House: Three out of five cards must have the same number and the remaining two must have the same number accordingly.";
-        if (processed.IsSameSuit)
+        if (isFlush)
             return "5. Flush: All cards are of the same suit.";
-        if (processed.IsStraight)
+        if (isStraight)
             return "6. Straight: Numbers of the five cards must be continuous and not all cards are of the same suit.";
-        if (maxOccurrences == 3 && processed.ProcessedCards.Count == 3)
+        if (_max == 3 && _count == 3)
             return "7. Three-of-a-Kind: Three out of five cards must have the same number.";
-        if (processed.ProcessedCards.Count == 3)
+        if (_count == 3)
             return "8. Two Pair: There must be two pairs where a pair means two cards which have the same number.";
-        if (processed.ProcessedCards.Count == 4)
+        if (_count == 4)
             return "9. One Pair: There must be a pair where a pair means two cards which have the same number.";
 
         return "10. Nothing: the cards don't match any of the hands above";
@@ -152,22 +124,5 @@
     {
         public string Suit { get; set; }
         public int Number { get; set; }
-    }
-
-    /// <summary>
-    /// Stores the states of the card collection.
-    /// </summary>
-    public class clsProcessedCardsStatus()
-    {
-        // True if the Numbers on all cards in the collection are in a sequence
-        public bool IsStraight { get; set; } = true;
-
-        // True if the Suits on all cards in the collection are the same
-        public bool IsSameSuit { get; set; } = true;
-
-        // True if the first sorted card is an Ace (Number 1). IsStraight and IsSameSuit must be True for this flag to be considered.
-        public bool IsRoyalFlushCandidate { get; set; } = true;
-
-        public Dictionary<int, int> ProcessedCards = new Dictionary<int, int>();
     }
 }
